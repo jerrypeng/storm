@@ -1160,6 +1160,9 @@ public class Config extends HashMap<String, Object> {
     @isInteger
     public static final String SUPERVISOR_BLOBSTORE_DOWNLOAD_MAX_RETRIES = "supervisor.blobstore.download.max_retries";
 
+    @isString
+    public static String SUPERVISOR_CGROUP_ROOTDIR = "supervisor.cgroup.rootdir";
+
     /**
      * The blobstore super user has all read/write/admin permissions to all blobs - user running
      * the blobstore.
@@ -2356,5 +2359,9 @@ public class Config extends HashMap<String, Object> {
         if (clazz != null) {
             this.put(Config.TOPOLOGY_SCHEDULER_STRATEGY, clazz.getName());
         }
+    }
+
+    public static String getCgroupRootDir(Map conf) {
+        return (String) conf.get(SUPERVISOR_CGROUP_ROOTDIR);
     }
 }
