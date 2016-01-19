@@ -42,7 +42,8 @@
   (:require [metrics.gauges :refer [defgauge]])
   (:require [metrics.meters :refer [defmeter mark!]])
   (:gen-class
-    :methods [^{:static true} [launch [org.apache.storm.scheduler.ISupervisor] void]]))
+    :methods [^{:static true} [launch [org.apache.storm.scheduler.ISupervisor] void]])
+  (:import [org.apache.storm.container.cgroup CgroupManager]))
 
 (defmeter supervisor:num-workers-launched)
 
@@ -300,7 +301,8 @@
         (try
           (rmpath (worker-pid-path conf id pid))
           (catch Exception e)))) ;; on windows, the supervisor may still holds the lock on the worker directory
-    (try-cleanup-worker conf id))
+    (try-cleanup-worker conf id)
+    (.shutDownWorker (:cgroup-manager supervisor) id true))
   (log-message "Shut down " (:supervisor-id supervisor) ":" id))
 
 (def SUPERVISOR-ZK-ACLS
@@ -343,6 +345,7 @@
    :sync-retry (atom 0)
    :download-lock (Object.)
    :stormid->profiler-actions (atom {})
+   :cgroup-manager (CgroupManager. conf)
    })
 
 (defn required-topo-files-exist?
@@ -380,7 +383,7 @@
                 (:storm-id assignment)
                 port
                 id
-                mem-onheap)
+                resources)
               [id port])
             (do
               (log-message "Missing topology storm code, so can't launch worker with assignment "
@@ -1031,7 +1034,7 @@
       (create-symlink! worker-dir topo-dir "artifacts" port))))
 
 (defmethod launch-worker
-    :distributed [supervisor storm-id port worker-id mem-onheap]
+    :distributed [supervisor storm-id port worker-id resources]
     (let [conf (:conf supervisor)
           run-worker-as-user (conf SUPERVISOR-RUN-WORKER-AS-USER)
           storm-home (System/getProperty "storm.home")
@@ -1055,9 +1058,16 @@
                         (add-to-classpath [stormjar])
                         (add-to-classpath topo-classpath))
           top-gc-opts (storm-conf TOPOLOGY-WORKER-GC-CHILDOPTS)
-          mem-onheap (if (and mem-onheap (> mem-onheap 0)) ;; not nil and not zero
-                       (int (Math/ceil mem-onheap)) ;; round up
+          mem-onheap (if (and (.get_mem_on_heap resources) (> (.get_mem_on_heap resources) 0)) ;; not nil and not zero
+                       (int (Math/ceil (.get_mem_on_heap resources))) ;; round up
                        (storm-conf WORKER-HEAP-MEMORY-MB)) ;; otherwise use default value
+          mem-offheap (if (.get_mem_off_heap resources)
+                        (int (Math/ceil (.get_mem_on_heap resources))) ;; round up
+                        0)
+
+          cpu (int (Math/ceil (.get_cpu resources)))
+
+          cgroup-manager (:cgroup-manager supervisor)
           gc-opts (substitute-childopts (if top-gc-opts top-gc-opts (conf WORKER-GC-CHILDOPTS)) worker-id storm-id port mem-onheap)
           topo-worker-logwriter-childopts (storm-conf TOPOLOGY-WORKER-LOGWRITER-CHILDOPTS)
           user (storm-conf TOPOLOGY-SUBMITTER-USER)
@@ -1074,8 +1084,27 @@
           topology-worker-environment (if-let [env (storm-conf TOPOLOGY-ENVIRONMENT)]
                                         (merge env {"LD_LIBRARY_PATH" jlp})
                                         {"LD_LIBRARY_PATH" jlp})
+
+          ;; The manually set CGROUP-WORKER-MEMORY-MB-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+          cgroup-mem-resources-map (cond
+                                     (storm-conf CGROUP-WORKER-MEMORY-MB-LIMIT) {:memory (storm-conf CGROUP-WORKER-MEMORY-MB-LIMIT)}
+                                     (+ mem-onheap mem-offheap) {:memory (+ mem-onheap mem-offheap)}
+                                     :else nil)
+
+          ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+          cgroup-cpu-resources-map (cond
+                                     (storm-conf CGROUP-WORKER-CPU-LIMIT) {:cpu (storm-conf CGROUP-WORKER-CPU-LIMIT)}
+                                     (not= cpu nil) {:cpu cpu}
+                                     :else nil)
+
+          cgroup-resource-map (merge cgroup-cpu-resources-map cgroup-mem-resources-map)
+
+          _ (log-message "cgroup-mem-resources-map: " cgroup-mem-resources-map " cgroup-resource-map: " cgroup-resource-map " cgroup-cpu-resources-map: " cgroup-cpu-resources-map)
+
           command (concat
-                    [(java-cmd) "-cp" classpath 
+                    [(if (storm-conf CGROUP-ENABLE)
+                       (.startNewWorker cgroup-manager conf cgroup-resource-map worker-id))
+                     (java-cmd) "-cp" classpath
                      topo-worker-logwriter-childopts
                      (str "-Dlogfile.name=" logfilename)
                      (str "-Dstorm.home=" storm-home)
@@ -1164,7 +1193,7 @@
           (FileUtils/copyDirectory (File. (.getFile url)) (File. target-dir)))))))
 
 (defmethod launch-worker
-    :local [supervisor storm-id port worker-id mem-onheap]
+    :local [supervisor storm-id port worker-id resources]
     (let [conf (:conf supervisor)
           pid (uuid)
           worker (worker/mk-worker conf

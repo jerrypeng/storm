@@ -17,6 +17,9 @@
  */
 package org.apache.storm.utils;
 
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteException;
 import org.apache.storm.Config;
 import org.apache.storm.blobstore.BlobStore;
 import org.apache.storm.blobstore.BlobStoreAclHandler;
@@ -1041,9 +1044,9 @@ public class Utils {
             .connectionTimeoutMs(Utils.getInt(conf.get(Config.STORM_ZOOKEEPER_CONNECTION_TIMEOUT)))
             .sessionTimeoutMs(Utils.getInt(conf.get(Config.STORM_ZOOKEEPER_SESSION_TIMEOUT)))
             .retryPolicy(new StormBoundedExponentialBackoffRetry(
-                        Utils.getInt(conf.get(Config.STORM_ZOOKEEPER_RETRY_INTERVAL)),
-                        Utils.getInt(conf.get(Config.STORM_ZOOKEEPER_RETRY_INTERVAL_CEILING)),
-                        Utils.getInt(conf.get(Config.STORM_ZOOKEEPER_RETRY_TIMES))));
+                    Utils.getInt(conf.get(Config.STORM_ZOOKEEPER_RETRY_INTERVAL)),
+                    Utils.getInt(conf.get(Config.STORM_ZOOKEEPER_RETRY_INTERVAL_CEILING)),
+                    Utils.getInt(conf.get(Config.STORM_ZOOKEEPER_RETRY_TIMES))));
 
         if (auth != null && auth.scheme != null && auth.payload != null) {
             builder.authorization(auth.scheme, auth.payload);
@@ -1368,6 +1371,60 @@ public class Utils {
             client.close();
         }
         return topologyInfo;
+    }
+
+    public static void ensure_process_killed(Integer pid) {
+        // in this function, just kill the process 5 times
+        // make sure the process be killed definitely
+        for (int i = 0; i < 5; i++) {
+            try {
+                exec_command("kill -9 " + pid);
+                LOG.info("kill -9 process " + pid);
+                sleepMs(100);
+            } catch (ExecuteException e) {
+                LOG.info("Error when trying to kill " + pid + ". Process has been killed");
+            } catch (Exception e) {
+                LOG.info("Error when trying to kill " + pid + ".Exception ", e);
+            }
+        }
+    }
+
+    public static void process_killed(Integer pid) {
+        try {
+            exec_command("kill " + pid);
+            LOG.info("kill process " + pid);
+        } catch (ExecuteException e) {
+            LOG.info("Error when trying to kill " + pid + ". Process has been killed. ");
+        } catch (Exception e) {
+            LOG.info("Error when trying to kill " + pid + ".Exception ", e);
+        }
+    }
+
+    public static void kill(Integer pid) {
+        process_killed(pid);
+
+        sleepMs(5 * 1000);
+
+        ensure_process_killed(pid);
+    }
+
+    public static void exec_command(String command) throws ExecuteException, IOException {
+        String[] cmdlist = command.split(" ");
+        CommandLine cmd = new CommandLine(cmdlist[0]);
+        for (int i = 1; i < cmdlist.length; i++) {
+            cmd.addArgument(cmdlist[i]);
+        }
+
+        DefaultExecutor exec = new DefaultExecutor();
+        exec.execute(cmd);
+    }
+
+    public static void sleepMs(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+
+        }
     }
 }
 
