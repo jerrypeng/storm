@@ -27,7 +27,10 @@ public class TestCGroup {
 
         Map<String, String> resourcesMap = new HashMap<String, String>();
         resourcesMap.put("cpu", "200");
-        LOG.info("Commandline: {}", manager.startNewWorker(config, resourcesMap , UUID.randomUUID().toString()));
+        String workerId = UUID.randomUUID().toString();
+        LOG.info("Starting worker {} Commandline: {}", workerId, manager.startNewWorker(config, resourcesMap, workerId));
+
+        manager.shutDownWorker(workerId, true);
 
     }
 }
