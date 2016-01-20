@@ -27,11 +27,12 @@ public class TestCGroup {
 
         Map<String, Integer> resourcesMap = new HashMap<String, Integer>();
         resourcesMap.put("cpu", 200);
-        resourcesMap.put("memory", 1024);
+        resourcesMap.put("mem-onheap", 1024);
+        resourcesMap.put("mem-offheap", 1024);
         String workerId = UUID.randomUUID().toString();
         LOG.info("Starting worker {} Commandline: {}", workerId, manager.startNewWorker(config, resourcesMap, workerId));
 
-        manager.shutDownWorker(workerId, true);
+        //manager.shutDownWorker(workerId, true);
 
     }
 }
