@@ -15,9 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.storm.container;
+package org.apache.storm.container.cgroup;
 
-import org.apache.storm.container.cgroup.CgroupCommon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

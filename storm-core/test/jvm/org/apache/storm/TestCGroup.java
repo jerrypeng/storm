@@ -1,12 +1,14 @@
 package org.apache.storm;
 
-import org.apache.storm.container.CgroupManager;
+import org.apache.storm.container.cgroup.CgroupManager;
 import org.apache.storm.utils.Utils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -23,7 +25,9 @@ public class TestCGroup {
 
         CgroupManager manager = new CgroupManager(config);
 
-        LOG.info("Commandline: {}", manager.startNewWorker(config, 2 , UUID.randomUUID().toString()));
+        Map<String, String> resourcesMap = new HashMap<String, String>();
+        resourcesMap.put("cpu", "200");
+        LOG.info("Commandline: {}", manager.startNewWorker(config, resourcesMap , UUID.randomUUID().toString()));
 
     }
 }

@@ -17,9 +17,9 @@
  */
 package org.apache.storm.container.cgroup.core;
 
-import org.apache.storm.container.CgroupUtils;
-import org.apache.storm.container.Constants;
-import org.apache.storm.container.SubSystemType;
+import org.apache.storm.container.cgroup.CgroupUtils;
+import org.apache.storm.container.cgroup.Constants;
+import org.apache.storm.container.cgroup.SubSystemType;
 
 import java.io.IOException;
 import java.util.HashMap;

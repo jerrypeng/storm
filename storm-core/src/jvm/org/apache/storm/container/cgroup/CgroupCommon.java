@@ -17,10 +17,6 @@
  */
 package org.apache.storm.container.cgroup;
 
-import org.apache.storm.container.CgroupUtils;
-import org.apache.storm.container.Constants;
-import org.apache.storm.container.Hierarchy;
-import org.apache.storm.container.SubSystemType;
 import org.apache.storm.container.cgroup.core.CgroupCore;
 
 import java.io.File;

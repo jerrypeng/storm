@@ -17,7 +17,7 @@
  */
 package org.apache.storm.container.cgroup.core;
 
-import org.apache.storm.container.SubSystemType;
+import org.apache.storm.container.cgroup.SubSystemType;
 
 public interface CgroupCore {
 

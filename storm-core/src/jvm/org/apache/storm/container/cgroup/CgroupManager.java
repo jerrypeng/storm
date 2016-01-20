@@ -1,7 +1,7 @@
-package org.apache.storm.container;
+package org.apache.storm.container.cgroup;
 
 import org.apache.storm.Config;
-import org.apache.storm.container.cgroup.CgroupCommon;
+import org.apache.storm.container.ResourceIsolationInterface;
 import org.apache.storm.container.cgroup.core.CgroupCore;
 import org.apache.storm.container.cgroup.core.CpuCore;
 import org.apache.storm.utils.Utils;
@@ -14,13 +14,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class CgroupManager {
+public class CgroupManager implements ResourceIsolationInterface {
 
     public static final Logger LOG = LoggerFactory.getLogger(CgroupManager.class);
 
     public static final String JSTORM_HIERARCHY_NAME = "jstorm_cpu";
 
-    public static final int ONE_CPU_SLOT = 1024;
+    //public static final int ONE_CPU_SLOT = 1024;
 
     private CgroupCenter center;
 
@@ -79,12 +79,18 @@ public class CgroupManager {
         }
     }
 
-    public String startNewWorker(Map conf, int cpuNum, String workerId) throws SecurityException, IOException {
+    public String startNewWorker(Map conf, Map resourcesMap, String workerId) throws SecurityException {
+        int cpuNum = Integer.parseInt((String) resourcesMap.get("cpu"));
+
         CgroupCommon workerGroup = new CgroupCommon(workerId, h, this.rootCgroup);
         this.center.create(workerGroup);
         CgroupCore cpu = workerGroup.getCores().get(SubSystemType.cpu);
         CpuCore cpuCore = (CpuCore) cpu;
-        cpuCore.setCpuShares(cpuNum * ONE_CPU_SLOT);
+        try {
+            cpuCore.setCpuShares(cpuNum);
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot set cpu shares!");
+        }
         //setCpuUsageUpperLimit(cpuCore, ConfigExtension.getWorkerCpuCoreUpperLimit(conf));
 
         StringBuilder sb = new StringBuilder();
