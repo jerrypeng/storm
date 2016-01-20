@@ -1160,8 +1160,17 @@ public class Config extends HashMap<String, Object> {
     @isInteger
     public static final String SUPERVISOR_BLOBSTORE_DOWNLOAD_MAX_RETRIES = "supervisor.blobstore.download.max_retries";
 
+    /**
+     * root directory for cgoups
+     */
     @isString
     public static String SUPERVISOR_CGROUP_ROOTDIR = "supervisor.cgroup.rootdir";
+
+    /**
+     * flag to determine whether to use cgroups
+     */
+    @isBoolean
+    public static final String SUPERVISOR_ENABLE_CGROUP = "supervisor.enable.cgroup";
 
     /**
      * The blobstore super user has all read/write/admin permissions to all blobs - user running

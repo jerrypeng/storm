@@ -25,8 +25,9 @@ public class TestCGroup {
 
         CgroupManager manager = new CgroupManager(config);
 
-        Map<String, String> resourcesMap = new HashMap<String, String>();
-        resourcesMap.put("cpu", "200");
+        Map<String, Integer> resourcesMap = new HashMap<String, Integer>();
+        resourcesMap.put("cpu", 200);
+        resourcesMap.put("memory", 1024);
         String workerId = UUID.randomUUID().toString();
         LOG.info("Starting worker {} Commandline: {}", workerId, manager.startNewWorker(config, resourcesMap, workerId));
 

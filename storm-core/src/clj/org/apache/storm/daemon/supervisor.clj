@@ -344,6 +344,7 @@
    :sync-retry (atom 0)
    :download-lock (Object.)
    :stormid->profiler-actions (atom {})
+   :cgroup-manager (CgroupManager. conf)
    })
 
 (defn required-topo-files-exist?
@@ -1063,7 +1064,7 @@
                         (int (Math/ceil (.get_mem_on_heap resources))) ;; round up
                         0)
 
-          cpu (.get_cpu resources)
+          cpu (int (Math/ceil (.get_cpu resources)))
 
           cgroup-manager (CgroupManager. conf)
           gc-opts (substitute-childopts (if top-gc-opts top-gc-opts (conf WORKER-GC-CHILDOPTS)) worker-id storm-id port mem-onheap)
@@ -1085,8 +1086,9 @@
 
 
           command (concat
-                    [(.startNewWorker cgroup-manager conf {:cpu cpu :mem-onheap mem-onheap :mem-offheap mem-offheap} worker-id)
-                      (java-cmd) "-cp" classpath
+                    [(if (storm-conf SUPERVISOR-ENABLE-CGROUP)
+                       (.startNewWorker cgroup-manager conf {:cpu cpu :mem-onheap mem-onheap :mem-offheap mem-offheap} worker-id))
+                     (java-cmd) "-cp" classpath
                      topo-worker-logwriter-childopts
                      (str "-Dlogfile.name=" logfilename)
                      (str "-Dstorm.home=" storm-home)

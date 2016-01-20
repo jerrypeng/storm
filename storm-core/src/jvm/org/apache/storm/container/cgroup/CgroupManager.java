@@ -4,6 +4,7 @@ import org.apache.storm.Config;
 import org.apache.storm.container.ResourceIsolationInterface;
 import org.apache.storm.container.cgroup.core.CgroupCore;
 import org.apache.storm.container.cgroup.core.CpuCore;
+import org.apache.storm.container.cgroup.core.MemoryCore;
 import org.apache.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,14 +81,21 @@ public class CgroupManager implements ResourceIsolationInterface {
     }
 
     public String startNewWorker(Map conf, Map resourcesMap, String workerId) throws SecurityException {
-        int cpuNum = Integer.parseInt((String) resourcesMap.get("cpu"));
+        LOG.info("resourcesMap: {}", resourcesMap);
+        int cpuNum = (int) resourcesMap.get("cpu");
+        int onHeapMem = (int) resourcesMap.get("mem-onheap");
+        int offHeapMem = (int) resourcesMap.get("mem-offheap");
+        int totalMem = onHeapMem + offHeapMem;
 
         CgroupCommon workerGroup = new CgroupCommon(workerId, h, this.rootCgroup);
         this.center.create(workerGroup);
         CgroupCore cpu = workerGroup.getCores().get(SubSystemType.cpu);
         CpuCore cpuCore = (CpuCore) cpu;
+        MemoryCore memCore = (MemoryCore) workerGroup.getCores().get(SubSystemType.memory);
+
         try {
             cpuCore.setCpuShares(cpuNum);
+            memCore.setPhysicalUsageLimit(totalMem * 1024 * 1024);
         } catch (IOException e) {
             throw new RuntimeException("Cannot set cpu shares!");
         }
