@@ -1086,7 +1086,7 @@
 
 
           command (concat
-                    [(if (storm-conf SUPERVISOR-ENABLE-CGROUP)
+                    [(if (storm-conf CGROUP-ENABLE)
                        (.startNewWorker cgroup-manager conf {:cpu cpu :mem-onheap mem-onheap :mem-offheap mem-offheap} worker-id))
                      (java-cmd) "-cp" classpath
                      topo-worker-logwriter-childopts

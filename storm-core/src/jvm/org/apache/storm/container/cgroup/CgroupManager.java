@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,7 +21,16 @@ public class CgroupManager implements ResourceIsolationInterface {
 
     public static final Logger LOG = LoggerFactory.getLogger(CgroupManager.class);
 
-    public static final String JSTORM_HIERARCHY_NAME = "jstorm_cpu";
+    //public static final String STORM_CPU_HIERARCHY_NAME = "storm_cpu";
+
+    //public static final String STORM_MEMORY_HIERARCHY_NAME = "storm_cpu";
+
+    //public static final String STORM_HIERARCHY_NAME = "storm";
+
+    //public static final String STORM_HIERARCHY_DIR = "/cgroup/storm_resources";
+
+    //public static final String[] CGROUP_RESOURCES = {"cpu", "memory"};
+
 
     //public static final int ONE_CPU_SLOT = 1024;
 
@@ -29,7 +40,8 @@ public class CgroupManager implements ResourceIsolationInterface {
 
     private CgroupCommon rootCgroup;
 
-    private static final String JSTORM_CPU_HIERARCHY_DIR = "/cgroup/cpu";
+    //private static final String STORM_CPU_HIERARCHY_DIR = "/cgroup/cpu";
+
     private static String rootDir;
 
     public CgroupManager(Map conf) {
@@ -41,15 +53,15 @@ public class CgroupManager implements ResourceIsolationInterface {
         if (rootDir == null)
             throw new RuntimeException("Check configuration file. The supervisor.cgroup.rootdir is missing.");
 
-        File file = new File(JSTORM_CPU_HIERARCHY_DIR + "/" + rootDir);
+        File file = new File(Config.getCGroupStormHierarchyDir(conf) + "/" + rootDir);
         if (!file.exists()) {
-            LOG.error(JSTORM_CPU_HIERARCHY_DIR + "/" + rootDir + " is not existing.");
+            LOG.error(Config.getCGroupStormHierarchyDir(conf) + "/" + rootDir + " is not existing.");
             throw new RuntimeException("Check if cgconfig service starts or /etc/cgconfig.conf is consistent with configuration file.");
         }
         center = CgroupCenter.getInstance();
         if (center == null)
             throw new RuntimeException("Cgroup error, please check /proc/cgroups");
-        this.prepareSubSystem();
+        this.prepareSubSystem(conf);
     }
 
     private int validateCpuUpperLimitValue(int value) {
@@ -126,12 +138,21 @@ public class CgroupManager implements ResourceIsolationInterface {
         this.center.delete(this.rootCgroup);
     }
 
-    private void prepareSubSystem() {
-        h = center.busy(SubSystemType.cpu);
+    private void prepareSubSystem(Map conf) {
+        List<SubSystemType> subSystemTypes = new LinkedList<>();
+        for (String resource : Config.getCGroupStormResources(conf)) {
+            subSystemTypes.add(SubSystemType.getSubSystem(resource));
+        }
+
+        LOG.info("subSystemTypes: {}", subSystemTypes);
+        h = center.busy(subSystemTypes);
+
+        LOG.info("Heirarchy name {} dir {} subsystems {} RootCgroups {} type {}", h.getName(), h.getDir(), h.getSubSystems(), h.getRootCgroups(), h.getType());
+
         if (h == null) {
             Set<SubSystemType> types = new HashSet<SubSystemType>();
             types.add(SubSystemType.cpu);
-            h = new Hierarchy(JSTORM_HIERARCHY_NAME, types, JSTORM_CPU_HIERARCHY_DIR);
+            h = new Hierarchy(Config.getCGroupStormHierarchyName(conf), types, Config.getCGroupStormHierarchyDir(conf));
         }
         rootCgroup = new CgroupCommon(rootDir, h, h.getRootCgroups());
     }

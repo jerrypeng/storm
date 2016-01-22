@@ -31,6 +31,8 @@ public interface CgroupOperation {
 
     public Hierarchy busy(SubSystemType subsystem);
 
+    public Hierarchy busy(List<SubSystemType> subSystems);
+
     public Hierarchy mounted(Hierarchy hierarchy);
 
     public void mount(Hierarchy hierarchy) throws IOException;

@@ -66,4 +66,13 @@ public class SubSystem {
         this.enable = enable;
     }
 
+    @Override
+    public boolean equals(Object object) {
+        boolean ret = false;
+        if (object != null && object instanceof SubSystem) {
+            ret = (this.type.equals(((SubSystem)object).getType()) && this.hierarchyID == ((SubSystem)object).getHierarchyID());
+        }
+        return ret;
+    }
+
 }

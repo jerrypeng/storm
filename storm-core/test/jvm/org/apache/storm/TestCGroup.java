@@ -20,8 +20,8 @@ public class TestCGroup {
     @Test
     public void test() throws IOException {
         Config config = new Config();
-        config.put(Config.SUPERVISOR_CGROUP_ROOTDIR, "storm");
         config.putAll(Utils.readDefaultConfig());
+        //config.put(Config.CGROUP_SUPERVISOR_ROOTDIR, "storm");
 
         CgroupManager manager = new CgroupManager(config);
 

@@ -133,6 +133,24 @@ public class CgroupCenter implements CgroupOperation {
     }
 
     @Override
+    public Hierarchy busy(List<SubSystemType> subSystems) {
+        List<Hierarchy> hierarchies = this.getHierarchies();
+        for (Hierarchy hierarchy : hierarchies) {
+            Hierarchy ret = hierarchy;
+            for (SubSystemType subsystem : subSystems) {
+                if (!hierarchy.getSubSystems().contains(subsystem)) {
+                    ret = null;
+                    break;
+                }
+            }
+            if (ret != null) {
+                return ret;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public Hierarchy mounted(Hierarchy hierarchy) {
         // TODO Auto-generated method stub
         List<Hierarchy> hierarchies = this.getHierarchies();
