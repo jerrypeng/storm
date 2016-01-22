@@ -107,9 +107,15 @@ public class CgroupManager implements ResourceIsolationInterface {
 
         try {
             cpuCore.setCpuShares(cpuNum);
-            memCore.setPhysicalUsageLimit(totalMem * 1024 * 1024);
         } catch (IOException e) {
             throw new RuntimeException("Cannot set cpu shares!");
+        }
+
+        try {
+            LOG.info("mem: {} - {}", Long.valueOf(totalMem * 1024 * 1024), (totalMem * 1024 * 1024));
+            memCore.setPhysicalUsageLimit(Long.valueOf(totalMem * 1024 * 1024));
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot set MEMORY_LIMIT_IN_BYTES !");
         }
         //setCpuUsageUpperLimit(cpuCore, ConfigExtension.getWorkerCpuCoreUpperLimit(conf));
 
