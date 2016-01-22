@@ -220,7 +220,11 @@ public class CgroupCenter implements CgroupOperation {
             LOG.error(cgroup.getDir() + " is existed");
             return;
         }
-        (new File(cgroup.getDir())).mkdir();
+
+        //Todo perhaps thrown exception or print out error message is dir is not created successfully
+        if (!(new File(cgroup.getDir())).mkdir()) {
+            LOG.error("could not create cgroup dir at {}", cgroup.getDir());
+        }
     }
 
     @Override

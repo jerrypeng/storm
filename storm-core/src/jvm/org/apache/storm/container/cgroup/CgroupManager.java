@@ -97,7 +97,7 @@ public class CgroupManager implements ResourceIsolationInterface {
         Integer cpuNum = (Integer) resourcesMap.get("cpu");
         Integer onHeapMem = (Integer) resourcesMap.get("mem-onheap");
         Integer offHeapMem = (Integer) resourcesMap.get("mem-offheap");
-        Integer totalMem = onHeapMem + offHeapMem;
+        Long totalMem = new Long (offHeapMem + onHeapMem);
 
         LOG.info("cpuNum {} onHeapMem {} offHeapMem {} totalMem {}", cpuNum, onHeapMem, offHeapMem, totalMem);
 
