@@ -2392,8 +2392,8 @@ public class Config extends HashMap<String, Object> {
         return (String) conf.get(Config.CGROUP_STORM_HIERARCHY_DIR);
     }
 
-    public static String[] getCGroupStormResources(Map conf) {
-        return (String[]) conf.get(Config.CGROUP_STORM_RESOURCES);
+    public static ArrayList<String> getCGroupStormResources(Map conf) {
+        return (ArrayList<String>) conf.get(Config.CGROUP_STORM_RESOURCES);
     }
 
     public static String getCGroupStormHierarchyName(Map conf) {
