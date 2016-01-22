@@ -161,6 +161,8 @@ supervisor.memory.capacity.mb: 3072.0
 # using 100 makes it simple to set the desired value to the capacity measurement
 # for single threaded bolts
 supervisor.cpu.capacity: 400.0
+supervisor.enable.cgroup: false
+supervisor.cgroup.rootdir: "storm"
 
 ### worker.* configs are for task workers
 worker.heap.memory.mb: 768
@@ -277,3 +279,12 @@ pacemaker.thread.timeout: 10
 pacemaker.childopts: "-Xmx1024m"
 pacemaker.auth.method: "NONE"
 pacemaker.kerberos.users: []
+
+# Configs for CGroup support
+cgroup.storm.hierarchy.dir: "/cgroup/storm_resources"
+cgroup.storm.resources:
+    - cpu
+    - memory
+cgroup.storm.hierarchy.name: "storm"
+cgroup.enable: false
+cgroup.supervisor.rootdir: "storm"
