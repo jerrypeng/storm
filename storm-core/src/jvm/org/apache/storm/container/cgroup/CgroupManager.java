@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +125,23 @@ public class CgroupManager implements ResourceIsolationInterface {
         //setCpuUsageUpperLimit(cpuCore, ConfigExtension.getWorkerCpuCoreUpperLimit(conf));
 
         StringBuilder sb = new StringBuilder();
-        sb.append("cgexec -g cpu:").append(workerGroup.getName()).append(" ");
+
+        sb.append("cgexec -g ");
+
+        //todo need to modify command line to include memory
+
+        Iterator<SubSystemType> it = h.getSubSystems().iterator();
+        while(it.hasNext()) {
+            sb.append(it.next().toString());
+            if(it.hasNext()) {
+                sb.append(",");
+            } else {
+                sb.append(":");
+            }
+        }
+
+        sb.append(workerGroup.getName()).append(" ");
+
         return sb.toString();
     }
 
