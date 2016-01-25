@@ -83,7 +83,8 @@ public class CgroupManager implements ResourceIsolationInterface {
         Integer cpuNum = (Integer) resourcesMap.get("cpu");
         Long totalMem = null;
         if (resourcesMap.get("memory") != null) {
-            totalMem = new Long ((Integer) resourcesMap.get("memory"));
+            LOG.info("memory class: {}", resourcesMap.get("memory").getClass());
+            totalMem = new Long ((Long) resourcesMap.get("memory"));
 
         }
         LOG.info("cpuNum {} totalMem {}", cpuNum, totalMem);

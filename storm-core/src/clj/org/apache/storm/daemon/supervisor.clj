@@ -1067,7 +1067,7 @@
                        (int (Math/ceil (.get_mem_on_heap resources))) ;; round up
                        (storm-conf WORKER-HEAP-MEMORY-MB)) ;; otherwise use default value
           mem-offheap (if (.get_mem_off_heap resources)
-                        (int (Math/ceil (.get_mem_on_heap resources))) ;; round up
+                        (int (Math/ceil (.get_mem_off_heap resources))) ;; round up
                         0)
 
           cpu (int (Math/ceil (.get_cpu resources)))
@@ -1108,7 +1108,7 @@
 ;                                     :else nil)
 ;
 ;          cgroup-resource-map (merge cgroup-cpu-resources-map cgroup-mem-resources-map)
-
+;
 ;          _ (log-message "cgroup-mem-resources-map: " cgroup-mem-resources-map " cgroup-resource-map: " cgroup-resource-map " cgroup-cpu-resources-map: " cgroup-cpu-resources-map)
 
           command (concat
