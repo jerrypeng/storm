@@ -301,7 +301,8 @@
         (try
           (rmpath (worker-pid-path conf id pid))
           (catch Exception e)))) ;; on windows, the supervisor may still holds the lock on the worker directory
-    (try-cleanup-worker conf id))
+    (try-cleanup-worker conf id)
+    (.shutDownWorker (:cgroup-manager supervisor) id true))
   (log-message "Shut down " (:supervisor-id supervisor) ":" id))
 
 (def SUPERVISOR-ZK-ACLS
@@ -1066,7 +1067,7 @@
 
           cpu (int (Math/ceil (.get_cpu resources)))
 
-          cgroup-manager (CgroupManager. conf)
+          cgroup-manager (:cgroup-manager supervisor)
           gc-opts (substitute-childopts (if top-gc-opts top-gc-opts (conf WORKER-GC-CHILDOPTS)) worker-id storm-id port mem-onheap)
           topo-worker-logwriter-childopts (storm-conf TOPOLOGY-WORKER-LOGWRITER-CHILDOPTS)
           user (storm-conf TOPOLOGY-SUBMITTER-USER)
@@ -1084,10 +1085,25 @@
                                         (merge env {"LD_LIBRARY_PATH" jlp})
                                         {"LD_LIBRARY_PATH" jlp})
 
+          ;; The manually set CGROUP-WORKER-MEMORY-MB-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+          cgroup-mem-resources-map (cond
+                                     (storm-conf CGROUP-WORKER-MEMORY-MB-LIMIT) {:memory (storm-conf CGROUP-WORKER-MEMORY-MB-LIMIT)}
+                                     (+ mem-onheap mem-offheap) {:memory (+ mem-onheap mem-offheap)}
+                                     :else nil)
+
+          ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+          cgroup-cpu-resources-map (cond
+                                     (storm-conf CGROUP-WORKER-CPU-LIMIT) {:cpu (storm-conf CGROUP-WORKER-CPU-LIMIT)}
+                                     (cpu) {:cpu cpu}
+                                     :else nil)
+
+          cgroup-resource-map (merge cgroup-cpu-resources-map cgroup-mem-resources-map)
+
+          _ (log-message "cgroup-mem-resources-map: " cgroup-mem-resources-map " cgroup-resource-map: " cgroup-resource-map " cgroup-cpu-resources-map: " cgroup-cpu-resources-map)
 
           command (concat
                     [(if (storm-conf CGROUP-ENABLE)
-                       (.startNewWorker cgroup-manager conf {:cpu cpu :mem-onheap mem-onheap :mem-offheap mem-offheap} worker-id))
+                       (.startNewWorker cgroup-manager conf cgroup-resource-map worker-id))
                      (java-cmd) "-cp" classpath
                      topo-worker-logwriter-childopts
                      (str "-Dlogfile.name=" logfilename)

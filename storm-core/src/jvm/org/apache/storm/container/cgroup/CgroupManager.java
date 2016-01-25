@@ -22,26 +22,11 @@ public class CgroupManager implements ResourceIsolationInterface {
 
     public static final Logger LOG = LoggerFactory.getLogger(CgroupManager.class);
 
-    //public static final String STORM_CPU_HIERARCHY_NAME = "storm_cpu";
-
-    //public static final String STORM_MEMORY_HIERARCHY_NAME = "storm_cpu";
-
-    //public static final String STORM_HIERARCHY_NAME = "storm";
-
-    //public static final String STORM_HIERARCHY_DIR = "/cgroup/storm_resources";
-
-    //public static final String[] CGROUP_RESOURCES = {"cpu", "memory"};
-
-
-    //public static final int ONE_CPU_SLOT = 1024;
-
     private CgroupCenter center;
 
     private Hierarchy h;
 
     private CgroupCommon rootCgroup;
-
-    //private static final String STORM_CPU_HIERARCHY_DIR = "/cgroup/cpu";
 
     private static String rootDir;
 
@@ -96,31 +81,33 @@ public class CgroupManager implements ResourceIsolationInterface {
     public String startNewWorker(Map conf, Map resourcesMap, String workerId) throws SecurityException {
         //LOG.info("resourcesMap: {}", resourcesMap);
         Integer cpuNum = (Integer) resourcesMap.get("cpu");
-        Integer onHeapMem = (Integer) resourcesMap.get("mem-onheap");
-        Integer offHeapMem = (Integer) resourcesMap.get("mem-offheap");
-        Long totalMem = new Long (offHeapMem + onHeapMem);
+        Long totalMem = new Long ((Integer) resourcesMap.get("memory"));
 
-        LOG.info("cpuNum {} onHeapMem {} offHeapMem {} totalMem {}", cpuNum, onHeapMem, offHeapMem, totalMem);
+        LOG.info("cpuNum {} totalMem {}", cpuNum, totalMem);
 
         CgroupCommon workerGroup = new CgroupCommon(workerId, h, this.rootCgroup);
         this.center.create(workerGroup);
-        CgroupCore cpu = workerGroup.getCores().get(SubSystemType.cpu);
-        CpuCore cpuCore = (CpuCore) cpu;
-        MemoryCore memCore = (MemoryCore) workerGroup.getCores().get(SubSystemType.memory);
 
-        try {
-            cpuCore.setCpuShares(cpuNum);
-        } catch (IOException e) {
-            LOG.info("Exception thown: {}", e);
-            throw new RuntimeException("Cannot set cpu shares!");
+        if (cpuNum != null) {
+            CpuCore cpuCore = (CpuCore) workerGroup.getCores().get(SubSystemType.cpu);;
+
+            try {
+                cpuCore.setCpuShares(cpuNum);
+            } catch (IOException e) {
+                LOG.info("Exception thown: {}", e);
+                throw new RuntimeException("Cannot set cpu shares!");
+            }
         }
 
-        try {
-            LOG.info("mem: {} - {}", Long.valueOf(totalMem * 1024 * 1024), (totalMem * 1024 * 1024));
-            memCore.setPhysicalUsageLimit(Long.valueOf(totalMem * 1024 * 1024));
-        } catch (IOException e) {
-            LOG.info("Exception thown: {}", e);
-            throw new RuntimeException("Cannot set MEMORY_LIMIT_IN_BYTES !");
+        if (totalMem != null) {
+            MemoryCore memCore = (MemoryCore) workerGroup.getCores().get(SubSystemType.memory);
+            try {
+                LOG.info("mem: {} - {}", Long.valueOf(totalMem * 1024 * 1024), (totalMem * 1024 * 1024));
+                memCore.setPhysicalUsageLimit(Long.valueOf(totalMem * 1024 * 1024));
+            } catch (IOException e) {
+                LOG.info("Exception thown: {}", e);
+                throw new RuntimeException("Cannot set MEMORY_LIMIT_IN_BYTES !");
+            }
         }
         //setCpuUsageUpperLimit(cpuCore, ConfigExtension.getWorkerCpuCoreUpperLimit(conf));
 
@@ -154,6 +141,7 @@ public class CgroupManager implements ResourceIsolationInterface {
                 }
                 Utils.sleepMs(1500);
             }
+            LOG.info("deleting cgroup: {} dir {}", workerGroup.getName(), workerGroup.getDir());
             center.delete(workerGroup);
         } catch (Exception e) {
             LOG.info("No task of " + workerId);
