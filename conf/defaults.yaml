@@ -281,3 +281,12 @@ pacemaker.thread.timeout: 10
 pacemaker.childopts: "-Xmx1024m"
 pacemaker.auth.method: "NONE"
 pacemaker.kerberos.users: []
+
+# Configs for CGroup support
+cgroup.storm.hierarchy.dir: "/cgroup/storm_resources"
+cgroup.storm.resources:
+    - cpu
+    - memory
+cgroup.storm.hierarchy.name: "storm"
+cgroup.enable: false
+cgroup.supervisor.rootdir: "storm"

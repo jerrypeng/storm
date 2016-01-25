@@ -2147,6 +2147,48 @@ public class Config extends HashMap<String, Object> {
     @isString
     public static final Object CLIENT_JAR_TRANSFORMER = "client.jartransformer.class";
 
+
+    /**
+     * CGroup Setting below
+     */
+
+    /**
+     * root directory of the storm cgroup hierarchy
+     */
+    @isString
+    public static final Object CGROUP_STORM_HIERARCHY_DIR = "cgroup.storm.hierarchy.dir";
+
+    /**
+     * resources to to be controlled by cgroups
+     */
+    @isStringList
+    public static final Object CGROUP_STORM_RESOURCES = "cgroup.storm.resources";
+
+    /**
+     * name for the cgroup hierarchy
+     */
+    @isString
+    public static final Object CGROUP_STORM_HIERARCHY_NAME = "cgroup.storm.hierarchy.name";
+
+    /**
+     * flag to determine whether to use cgroups
+     */
+    @isBoolean
+    public static final String CGROUP_ENABLE = "cgroup.enable";
+
+    /**
+     * root directory for cgoups
+     */
+    @isString
+    public static String CGROUP_SUPERVISOR_ROOTDIR = "cgroup.supervisor.rootdir";
+
+    @isPositiveNumber
+    public static String CGROUP_WORKER_MEMORY_MB_LIMIT = "cgroup.worker.memory.mb.limit";
+
+    @isPositiveNumber
+    public static String CGROUP_WORKER_CPU_LIMIT = "cgroup.worker.cpu.limit";
+
+
     public static void setClasspath(Map conf, String cp) {
         conf.put(Config.TOPOLOGY_CLASSPATH, cp);
     }
@@ -2358,5 +2400,25 @@ public class Config extends HashMap<String, Object> {
         if (clazz != null) {
             this.put(Config.TOPOLOGY_SCHEDULER_STRATEGY, clazz.getName());
         }
+    }
+
+    public static String getCgroupRootDir(Map conf) {
+        return (String) conf.get(CGROUP_SUPERVISOR_ROOTDIR);
+    }
+
+    public static String getCGroupStormHierarchyDir(Map conf) {
+        return (String) conf.get(Config.CGROUP_STORM_HIERARCHY_DIR);
+    }
+
+    public static ArrayList<String> getCGroupStormResources(Map conf) {
+        ArrayList<String> ret = new ArrayList<String>();
+        for (String entry : ((Iterable<String>) conf.get(Config.CGROUP_STORM_RESOURCES))) {
+            ret.add(entry);
+        }
+        return ret;
+    }
+
+    public static String getCGroupStormHierarchyName(Map conf) {
+        return (String) conf.get(Config.CGROUP_STORM_HIERARCHY_NAME);
     }
 }
