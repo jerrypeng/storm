@@ -345,7 +345,9 @@
    :sync-retry (atom 0)
    :download-lock (Object.)
    :stormid->profiler-actions (atom {})
-   :cgroup-manager (CgroupManager. conf)
+   :cgroup-manager (if (conf CGROUP-ENABLE)
+                      (CgroupManager. conf)
+                      nil)
    })
 
 (defn required-topo-files-exist?
@@ -1070,7 +1072,6 @@
 
           cpu (int (Math/ceil (.get_cpu resources)))
 
-          cgroup-manager (:cgroup-manager supervisor)
           gc-opts (substitute-childopts (if top-gc-opts top-gc-opts (conf WORKER-GC-CHILDOPTS)) worker-id storm-id port mem-onheap)
           topo-worker-logwriter-childopts (storm-conf TOPOLOGY-WORKER-LOGWRITER-CHILDOPTS)
           user (storm-conf TOPOLOGY-SUBMITTER-USER)
@@ -1094,25 +1095,37 @@
                                             (str "file:///" storm-log4j2-conf-dir))
                                           storm-log4j2-conf-dir)
                                      file-path-separator "worker.xml")
-          ;; The manually set CGROUP-WORKER-MEMORY-MB-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
-          cgroup-mem-resources-map (cond
-                                     (storm-conf CGROUP-WORKER-MEMORY-MB-LIMIT) {:memory (storm-conf CGROUP-WORKER-MEMORY-MB-LIMIT)}
-                                     (+ mem-onheap mem-offheap) {:memory (+ mem-onheap mem-offheap)}
-                                     :else nil)
+;          ;; The manually set CGROUP-WORKER-MEMORY-MB-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+;          cgroup-mem-resources-map (cond
+;                                     (storm-conf CGROUP-WORKER-MEMORY-MB-LIMIT) {"memory" (storm-conf CGROUP-WORKER-MEMORY-MB-LIMIT)}
+;                                     (+ mem-onheap mem-offheap) {"memory" (+ mem-onheap mem-offheap)}
+;                                     :else nil)
+;
+;          ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+;          cgroup-cpu-resources-map (cond
+;                                     (storm-conf CGROUP-WORKER-CPU-LIMIT) {"cpu" (storm-conf CGROUP-WORKER-CPU-LIMIT)}
+;                                     (not= cpu nil) {"cpu" cpu}
+;                                     :else nil)
+;
+;          cgroup-resource-map (merge cgroup-cpu-resources-map cgroup-mem-resources-map)
 
-          ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
-          cgroup-cpu-resources-map (cond
-                                     (storm-conf CGROUP-WORKER-CPU-LIMIT) {:cpu (storm-conf CGROUP-WORKER-CPU-LIMIT)}
-                                     (not= cpu nil) {:cpu cpu}
-                                     :else nil)
-
-          cgroup-resource-map (merge cgroup-cpu-resources-map cgroup-mem-resources-map)
-
-          _ (log-message "cgroup-mem-resources-map: " cgroup-mem-resources-map " cgroup-resource-map: " cgroup-resource-map " cgroup-cpu-resources-map: " cgroup-cpu-resources-map)
+;          _ (log-message "cgroup-mem-resources-map: " cgroup-mem-resources-map " cgroup-resource-map: " cgroup-resource-map " cgroup-cpu-resources-map: " cgroup-cpu-resources-map)
 
           command (concat
-                    [(if (storm-conf CGROUP-ENABLE)
-                       (.startNewWorker cgroup-manager conf cgroup-resource-map worker-id))
+                    [(if (conf CGROUP-ENABLE)
+                       (.startNewWorker (:cgroup-manager supervisor) conf
+                         (merge
+                           ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+                           (cond
+                             (conf CGROUP-WORKER-MEMORY-MB-LIMIT) {"memory" (conf CGROUP-WORKER-MEMORY-MB-LIMIT)}
+                             (+ mem-onheap mem-offheap) {"memory" (+ mem-onheap mem-offheap)}
+                             :else nil)
+                           ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+                           (cond
+                             (conf CGROUP-WORKER-CPU-LIMIT) {"cpu" (conf CGROUP-WORKER-CPU-LIMIT)}
+                             (not= cpu nil) {"cpu" cpu}
+                             :else nil))
+                         worker-id))
                      (java-cmd) "-cp" classpath
                      topo-worker-logwriter-childopts
                      (str "-Dlogfile.name=" logfilename)
