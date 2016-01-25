@@ -2409,7 +2409,11 @@ public class Config extends HashMap<String, Object> {
     }
 
     public static ArrayList<String> getCGroupStormResources(Map conf) {
-        return (ArrayList<String>) conf.get(Config.CGROUP_STORM_RESOURCES);
+        ArrayList<String> ret = new ArrayList<String>();
+        for (String entry : ((Iterable<String>) conf.get(Config.CGROUP_STORM_RESOURCES))) {
+            ret.add(entry);
+        }
+        return ret;
     }
 
     public static String getCGroupStormHierarchyName(Map conf) {
