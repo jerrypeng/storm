@@ -79,10 +79,13 @@ public class CgroupManager implements ResourceIsolationInterface {
     }
 
     public String startNewWorker(Map conf, Map resourcesMap, String workerId) throws SecurityException {
-        //LOG.info("resourcesMap: {}", resourcesMap);
+        LOG.info("resourcesMap: {}", resourcesMap);
         Integer cpuNum = (Integer) resourcesMap.get("cpu");
-        Long totalMem = new Long ((Integer) resourcesMap.get("memory"));
+        Long totalMem = null;
+        if (resourcesMap.get("memory") != null) {
+            totalMem = new Long ((Integer) resourcesMap.get("memory"));
 
+        }
         LOG.info("cpuNum {} totalMem {}", cpuNum, totalMem);
 
         CgroupCommon workerGroup = new CgroupCommon(workerId, h, this.rootCgroup);

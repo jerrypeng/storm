@@ -223,7 +223,7 @@ public class CgroupCenter implements CgroupOperation {
 
         //Todo perhaps thrown exception or print out error message is dir is not created successfully
         if (!(new File(cgroup.getDir())).mkdir()) {
-            LOG.error("could not create cgroup dir at {}", cgroup.getDir());
+            LOG.error("Could not create cgroup dir at {}", cgroup.getDir());
         }
     }
 
