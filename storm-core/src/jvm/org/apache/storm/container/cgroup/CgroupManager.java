@@ -117,7 +117,7 @@ public class CgroupManager implements ResourceIsolationInterface {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("cgexec -g ");
+        sb.append("/bin/cgexec -g ");
 
         //todo need to modify command line to include memory
 
