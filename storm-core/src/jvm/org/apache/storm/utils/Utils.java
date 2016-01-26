@@ -1396,6 +1396,7 @@ public class Utils {
                 sleepMs(100);
             } catch (ExecuteException e) {
                 LOG.info("Error when trying to kill " + pid + ". Process has been killed");
+                return;
             } catch (Exception e) {
                 LOG.info("Error when trying to kill " + pid + ".Exception ", e);
             }
@@ -1416,7 +1417,7 @@ public class Utils {
     public static void kill(Integer pid) {
         process_killed(pid);
 
-        sleepMs(5 * 1000);
+        sleepMs(1000);
 
         ensure_process_killed(pid);
     }

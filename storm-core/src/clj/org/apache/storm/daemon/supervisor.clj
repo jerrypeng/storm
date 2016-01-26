@@ -349,9 +349,10 @@
    :stormid->profiler-actions (atom {})
    :cgroup-manager (if (conf CGROUP-ENABLE)
                      (let [cgroup-manager (.newInstance (Class/forName (conf STORM-RESOURCE-ISOLATION-PLUGIN)))]
-                           (.prepare cgroup-manager conf)
-                           cgroup-manager)
-                      nil)
+                       (.prepare cgroup-manager conf)
+                       (log-message "Using resource isolation plugin " (conf STORM-RESOURCE-ISOLATION-PLUGIN))
+                       cgroup-manager)
+                     nil)
    })
 
 (defn required-topo-files-exist?
