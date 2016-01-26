@@ -23,13 +23,14 @@ public class TestCGroup {
         config.putAll(Utils.readDefaultConfig());
         //config.put(Config.CGROUP_SUPERVISOR_ROOTDIR, "storm");
 
-        CgroupManager manager = new CgroupManager(config);
+        CgroupManager manager = new CgroupManager();
+        manager.prepare(config);
 
         Map<String, Integer> resourcesMap = new HashMap<String, Integer>();
         resourcesMap.put("cpu", 200);
         resourcesMap.put("memory", 1024);
         String workerId = UUID.randomUUID().toString();
-        LOG.info("Starting worker {} Commandline: {}", workerId, manager.startNewWorker(config, resourcesMap, workerId));
+        LOG.info("Starting worker {} Commandline: {}", workerId, manager.startNewWorker(workerId, resourcesMap));
 
         //manager.shutDownWorker(workerId, true);
 
