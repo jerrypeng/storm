@@ -1100,22 +1100,25 @@
                                           storm-log4j2-conf-dir)
                                      file-path-separator "worker.xml")
 
+          cgroup-command (if (conf CGROUP-ENABLE)
+                           (str/split
+                             (.startNewWorker (:cgroup-manager supervisor) worker-id
+                               (merge
+                                 ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+                                 (cond
+                                   (conf CGROUP-WORKER-MEMORY-MB-LIMIT) {"memory" (conf CGROUP-WORKER-MEMORY-MB-LIMIT)}
+                                   (+ mem-onheap mem-offheap) {"memory" (+ mem-onheap mem-offheap)}
+                                   :else nil)
+                                 ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
+                                 (cond
+                                   (conf CGROUP-WORKER-CPU-LIMIT) {"cpu" (conf CGROUP-WORKER-CPU-LIMIT)}
+                                   (not= cpu nil) {"cpu" cpu}
+                                   :else nil))) #" "))
+
           command (concat
-                    [(if (conf CGROUP-ENABLE)
-                       (str/split
-                         (.startNewWorker (:cgroup-manager supervisor) worker-id
-                           (merge
-                             ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
-                             (cond
-                               (conf CGROUP-WORKER-MEMORY-MB-LIMIT) {"memory" (conf CGROUP-WORKER-MEMORY-MB-LIMIT)}
-                               (+ mem-onheap mem-offheap) {"memory" (+ mem-onheap mem-offheap)}
-                               :else nil)
-                             ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
-                             (cond
-                               (conf CGROUP-WORKER-CPU-LIMIT) {"cpu" (conf CGROUP-WORKER-CPU-LIMIT)}
-                               (not= cpu nil) {"cpu" cpu}
-                               :else nil))) #" "))
-                     (java-cmd) "-cp" classpath
+                    (if (conf CGROUP-ENABLE)
+                      cgroup-command)
+                    [(java-cmd) "-cp" classpath
                      topo-worker-logwriter-childopts
                      (str "-Dlogfile.name=" logfilename)
                      (str "-Dstorm.home=" storm-home)
