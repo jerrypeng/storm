@@ -17,6 +17,7 @@
  */
 package org.apache.storm;
 
+import org.apache.storm.container.ResourceIsolationInterface;
 import org.apache.storm.scheduler.resource.strategies.eviction.IEvictionStrategy;
 import org.apache.storm.scheduler.resource.strategies.priority.ISchedulingPriorityStrategy;
 import org.apache.storm.scheduler.resource.strategies.scheduling.IStrategy;
@@ -2147,6 +2148,9 @@ public class Config extends HashMap<String, Object> {
     @isString
     public static final Object CLIENT_JAR_TRANSFORMER = "client.jartransformer.class";
 
+
+    @isImplementationOfClass(implementsClass = ResourceIsolationInterface.class)
+    public static final Object STORM_RESOURCE_ISOLATION_PLUGIN = "storm.resource.isolation.plugin";
 
     /**
      * CGroup Setting below

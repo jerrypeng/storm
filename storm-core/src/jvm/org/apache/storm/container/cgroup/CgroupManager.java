@@ -30,24 +30,29 @@ public class CgroupManager implements ResourceIsolationInterface {
 
     private static String rootDir;
 
-    public CgroupManager(Map conf) {
-        LOG.info("running on cgroup mode");
+    private Map conf;
 
+    public CgroupManager() {
+        LOG.info("running on cgroup mode");
+    }
+
+    public void prepare(Map conf) {
         // Cgconfig service is used to create the corresponding cpu hierarchy
         // "/cgroup/cpu"
-        rootDir = Config.getCgroupRootDir(conf);
-        if (rootDir == null)
+        this.conf = conf;
+        this.rootDir = Config.getCgroupRootDir(this.conf);
+        if (this.rootDir == null)
             throw new RuntimeException("Check configuration file. The supervisor.cgroup.rootdir is missing.");
 
-        File file = new File(Config.getCGroupStormHierarchyDir(conf) + "/" + rootDir);
+        File file = new File(Config.getCGroupStormHierarchyDir(conf) + "/" + this.rootDir);
         if (!file.exists()) {
-            LOG.error(Config.getCGroupStormHierarchyDir(conf) + "/" + rootDir + " is not existing.");
+            LOG.error(Config.getCGroupStormHierarchyDir(conf) + "/" + this.rootDir + " is not existing.");
             throw new RuntimeException("Check if cgconfig service starts or /etc/cgconfig.conf is consistent with configuration file.");
         }
-        center = CgroupCenter.getInstance();
-        if (center == null)
+        this.center = CgroupCenter.getInstance();
+        if (this.center == null)
             throw new RuntimeException("Cgroup error, please check /proc/cgroups");
-        this.prepareSubSystem(conf);
+        this.prepareSubSystem(this.conf);
     }
 
     private int validateCpuUpperLimitValue(int value) {
@@ -78,7 +83,7 @@ public class CgroupManager implements ResourceIsolationInterface {
         }
     }
 
-    public String startNewWorker(Map conf, Map resourcesMap, String workerId) throws SecurityException {
+    public String startNewWorker(String workerId, Map resourcesMap) throws SecurityException {
         LOG.info("resourcesMap: {}", resourcesMap);
         Integer cpuNum = (Integer) resourcesMap.get("cpu");
         Long totalMem = null;
@@ -117,7 +122,7 @@ public class CgroupManager implements ResourceIsolationInterface {
 
         StringBuilder sb = new StringBuilder();
 
-        //sb.append("/bin/cgexec -g ");
+        sb.append("/bin/cgexec -g ");
 
         //todo need to modify command line to include memory
 
@@ -146,10 +151,11 @@ public class CgroupManager implements ResourceIsolationInterface {
                     Utils.kill(pid);
                 }
                 Utils.sleepMs(1500);
-
-                if (!workerGroup.getTasks().isEmpty()) {
-                    LOG.error ("Tasks of workerId {} not sucessfully removed/killed", workerId);
-                }
+            }
+            Set<Integer> tasks = workerGroup.getTasks();
+            LOG.info("tasks to free: {}", tasks);
+            if (isKilled == true && !tasks.isEmpty()) {
+                throw new Exception("Cannot correctly showdown worker CGroup " + workerId + "tasks " + tasks.toString() + " still running!");
             }
             LOG.info("deleting cgroup: {} dir {}", workerGroup.getName(), workerGroup.getDir());
             center.delete(workerGroup);

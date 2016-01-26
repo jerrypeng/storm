@@ -9,7 +9,7 @@ import java.util.Map;
 public interface ResourceIsolationInterface {
 
 
-    public String startNewWorker(Map conf, Map resources, String workerId);
+    public String startNewWorker(String workerId, Map resources);
 
     public void shutDownWorker(String workerId, boolean isKilled);
 

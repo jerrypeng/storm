@@ -202,7 +202,6 @@ public class CgroupCommon implements CgroupCommonOperation {
         if (this.isRoot)
             return;
         Set<Integer> tasks = this.getTasks();
-        LOG.info("tasks to free: {}", tasks);
         if (tasks != null) {
             for (Integer task : tasks) {
                 this.parent.addTask(task);
