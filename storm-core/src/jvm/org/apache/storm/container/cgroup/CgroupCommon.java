@@ -18,6 +18,8 @@
 package org.apache.storm.container.cgroup;
 
 import org.apache.storm.container.cgroup.core.CgroupCore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +50,8 @@ public class CgroupCommon implements CgroupCommonOperation {
     private final boolean isRoot;
 
     private final Set<CgroupCommon> children = new HashSet<CgroupCommon>();
+
+    public static final Logger LOG = LoggerFactory.getLogger(CgroupCommon.class);
 
     public CgroupCommon(String name, Hierarchy hierarchy, CgroupCommon parent) {
         this.name = parent.getName() + "/" + name;
@@ -198,6 +202,7 @@ public class CgroupCommon implements CgroupCommonOperation {
         if (this.isRoot)
             return;
         Set<Integer> tasks = this.getTasks();
+        LOG.info("tasks to free: {}", tasks);
         if (tasks != null) {
             for (Integer task : tasks) {
                 this.parent.addTask(task);
