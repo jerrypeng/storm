@@ -132,6 +132,7 @@ public class CgroupManager implements ResourceIsolationInterface {
         }
 
         //sb.append(workerGroup.getName()).append(" ");
+        sb.append(workerGroup.getName());
 
         return sb.toString();
     }
