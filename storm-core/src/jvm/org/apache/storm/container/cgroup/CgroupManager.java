@@ -142,9 +142,14 @@ public class CgroupManager implements ResourceIsolationInterface {
         try {
             if (isKilled == false) {
                 for (Integer pid : workerGroup.getTasks()) {
+                    LOG.info("killing PID: {}", pid);
                     Utils.kill(pid);
                 }
                 Utils.sleepMs(1500);
+
+                if (!workerGroup.getTasks().isEmpty()) {
+                    LOG.error ("Tasks of workerId {} not sucessfully removed/killed", workerId);
+                }
             }
             LOG.info("deleting cgroup: {} dir {}", workerGroup.getName(), workerGroup.getDir());
             center.delete(workerGroup);
