@@ -302,7 +302,7 @@
           (rmpath (worker-pid-path conf id pid))
           (catch Exception e)))) ;; on windows, the supervisor may still holds the lock on the worker directory
     (try-cleanup-worker conf id)
-    (.shutDownWorker (:cgroup-manager supervisor) id true))
+    (.shutDownWorker (:cgroup-manager supervisor) id false))
   (log-message "Shut down " (:supervisor-id supervisor) ":" id))
 
 (def SUPERVISOR-ZK-ACLS
