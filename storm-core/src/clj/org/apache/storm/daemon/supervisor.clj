@@ -1113,6 +1113,7 @@
 
           command (concat
                     [(if (conf CGROUP-ENABLE)
+                       "/bin/cgexec" "-g"
                        (.startNewWorker (:cgroup-manager supervisor) conf
                          (merge
                            ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)

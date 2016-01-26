@@ -541,6 +541,7 @@
     (.redirectErrorStream builder true)
     (doseq [[k v] environment]
       (.put process-env k v))
+    (log-message "Starting process with command: " command)
     (let [process (.start builder)]
       (if (or log-prefix exit-code-callback)
         (async-loop
