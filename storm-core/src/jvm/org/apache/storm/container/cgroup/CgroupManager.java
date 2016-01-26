@@ -149,6 +149,7 @@ public class CgroupManager implements ResourceIsolationInterface {
             LOG.info("deleting cgroup: {} dir {}", workerGroup.getName(), workerGroup.getDir());
             center.delete(workerGroup);
         } catch (Exception e) {
+            LOG.info("Exceptions: {}", e);
             LOG.info("No task of " + workerId);
         }
 
