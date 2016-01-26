@@ -1112,8 +1112,8 @@
 ;          _ (log-message "cgroup-mem-resources-map: " cgroup-mem-resources-map " cgroup-resource-map: " cgroup-resource-map " cgroup-cpu-resources-map: " cgroup-cpu-resources-map)
 
           command (concat
-                    [(if (conf CGROUP-ENABLE)
-                       "/bin/cgexec" "-g"
+                    ["/bin/cgexec" "-g"
+                     (if (conf CGROUP-ENABLE)
                        (.startNewWorker (:cgroup-manager supervisor) conf
                          (merge
                            ;; The manually set CGROUP-WORKER-CPU-LIMIT config on supervisor will overwrite resources assigned by RAS (Resource Aware Scheduler)
