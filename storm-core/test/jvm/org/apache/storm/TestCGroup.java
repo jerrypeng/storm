@@ -59,7 +59,7 @@ public class TestCGroup {
         String workerId = UUID.randomUUID().toString();
         String command = manager.startNewWorker(workerId, resourcesMap);
 
-        String correctCommand = config.get(Config.CGROUP_CGEXEC_CMD) + " -g cpu,memory:/" + workerId;
+        String correctCommand = config.get(Config.CGROUP_CGEXEC_CMD) + " -g memory,cpu:/" + workerId;
         Assert.assertEquals("Check if cgroup launch command is correct", correctCommand, command);
 
         LOG.info("Starting worker {} Commandline: {}", workerId, command);
