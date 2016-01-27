@@ -292,3 +292,4 @@ cgroup.storm.resources:
 cgroup.storm.hierarchy.name: "storm"
 cgroup.enable: false
 cgroup.supervisor.rootdir: "storm"
+cgroup.cgexec.cmd: "/bin/cgexec"

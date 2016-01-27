@@ -2186,11 +2186,22 @@ public class Config extends HashMap<String, Object> {
     @isString
     public static String CGROUP_SUPERVISOR_ROOTDIR = "cgroup.supervisor.rootdir";
 
+    /**
+     * the manually set memory limit (in MB) for each CGroup on supervisor node
+     */
     @isPositiveNumber
     public static String CGROUP_WORKER_MEMORY_MB_LIMIT = "cgroup.worker.memory.mb.limit";
 
+    /**
+     * the manually set cpu share for each CGroup on supervisor node
+     */
     @isPositiveNumber
     public static String CGROUP_WORKER_CPU_LIMIT = "cgroup.worker.cpu.limit";
+
+    /**
+     * full path to cgexec command
+     */
+    public static String CGROUP_CGEXEC_CMD = "cgroup.cgexec.cmd";
 
 
     public static void setClasspath(Map conf, String cp) {

@@ -122,9 +122,7 @@ public class CgroupManager implements ResourceIsolationInterface {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("/bin/cgexec -g ");
-
-        //todo need to modify command line to include memory
+        sb.append(this.conf.get(Config.CGROUP_CGEXEC_CMD)).append(" -g ");
 
         Iterator<SubSystemType> it = h.getSubSystems().iterator();
         while(it.hasNext()) {
@@ -136,7 +134,6 @@ public class CgroupManager implements ResourceIsolationInterface {
             }
         }
 
-        //sb.append(workerGroup.getName()).append(" ");
         sb.append(workerGroup.getName());
 
         return sb.toString();
