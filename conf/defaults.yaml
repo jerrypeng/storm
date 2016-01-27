@@ -290,6 +290,7 @@ cgroup.storm.resources:
     - cpu
     - memory
 cgroup.storm.hierarchy.name: "storm"
+# Also determines whether the unit tests for cgroup runs.  If cgroup.enable is set to false the unit tests for cgroups will not run
 cgroup.enable: false
 cgroup.supervisor.rootdir: "storm"
 cgroup.cgexec.cmd: "/bin/cgexec"

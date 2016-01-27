@@ -1,6 +1,7 @@
 package org.apache.storm;
 
-import junit.framework.Assert;
+import org.junit.Assert;
+import org.junit.Assume;
 import org.apache.storm.container.cgroup.CgroupManager;
 import org.apache.storm.utils.Utils;
 import org.junit.Test;
@@ -8,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -48,6 +47,8 @@ public class TestCGroup {
     public void testSetupAndTearDown() throws IOException {
         Config config = new Config();
         config.putAll(Utils.readDefaultConfig());
+        //We don't want to run the test is CGroups are not setup
+        Assume.assumeTrue("Check if CGroups are setup", ((boolean) config.get(Config.CGROUP_ENABLE)) == true);
 
         Assert.assertTrue("Check if CGROUP_STORM_HIERARCHY_DIR exists", stormCGroupHierarchyExists(config));
         Assert.assertTrue("Check if CGROUP_SUPERVISOR_ROOTDIR exists", stormCGroupSupervisorRootDirExists(config));
@@ -113,12 +114,6 @@ public class TestCGroup {
     }
 
     public String readFileAll(String filePath) throws IOException {
-//        File file = new File(filePath);
-//        FileInputStream fis = new FileInputStream(file);
-//        byte[] data = new byte[(int) file.length()];
-//        fis.read(data);
-//        fis.close();
-
         byte[] data = Files.readAllBytes(Paths.get(filePath));
         LOG.info("data: {}", data);
         return new String(data).trim();
