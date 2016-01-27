@@ -68,7 +68,6 @@ public class CgroupManager implements ResourceIsolationInterface {
         Number totalMem = null;
         if (resourcesMap.get("memory") != null) {
             totalMem = (Number) resourcesMap.get("memory");
-
         }
 
         CgroupCommon workerGroup = new CgroupCommon(workerId, h, this.rootCgroup);
@@ -126,7 +125,7 @@ public class CgroupManager implements ResourceIsolationInterface {
             }
             this.center.delete(workerGroup);
         } catch (Exception e) {
-            LOG.info("Exception thrown when shutting worker " + workerId + " Exception: " + e);
+            LOG.error("Exception thrown when shutting worker " + workerId + " Exception: " + e);
         }
     }
 
