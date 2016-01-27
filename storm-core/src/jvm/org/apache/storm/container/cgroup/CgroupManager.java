@@ -31,7 +31,7 @@ public class CgroupManager implements ResourceIsolationInterface {
 
     private Map conf;
 
-    public void prepare(Map conf) {
+    public void prepare(Map conf) throws IOException {
         this.conf = conf;
         this.rootDir = Config.getCgroupRootDir(this.conf);
         if (this.rootDir == null)
@@ -78,8 +78,6 @@ public class CgroupManager implements ResourceIsolationInterface {
             CpuCore cpuCore = (CpuCore) workerGroup.getCores().get(SubSystemType.cpu);
             try {
                 cpuCore.setCpuShares(cpuNum.intValue());
-                //set the cpu usage upper limit
-                setCpuUsageUpperLimit(cpuCore, ((Number) this.conf.get(Config.SUPERVISOR_CPU_CAPACITY)).intValue());
             } catch (IOException e) {
                 throw new RuntimeException("Cannot set cpu.shares! Exception: " + e);
             }
@@ -136,13 +134,19 @@ public class CgroupManager implements ResourceIsolationInterface {
         this.center.delete(this.rootCgroup);
     }
 
-    private void prepareSubSystem(Map conf) {
+    private void prepareSubSystem(Map conf) throws IOException {
         List<SubSystemType> subSystemTypes = new LinkedList<>();
         for (String resource : Config.getCGroupStormResources(conf)) {
             subSystemTypes.add(SubSystemType.getSubSystem(resource));
         }
 
         h = center.busy(subSystemTypes);
+
+        LOG.info("root dir {} subsystems: {}", h.getRootCgroups().getDir(), h.getRootCgroups().getCores());
+
+        CpuCore supervisorRootCPU = (CpuCore) h.getRootCgroups().getCores().get(SubSystemType.cpu);
+        //set the cpu usage upper limit for all workers
+        setCpuUsageUpperLimit(supervisorRootCPU, ((Number) this.conf.get(Config.SUPERVISOR_CPU_CAPACITY)).intValue());
 
         if (h == null) {
             Set<SubSystemType> types = new HashSet<SubSystemType>();

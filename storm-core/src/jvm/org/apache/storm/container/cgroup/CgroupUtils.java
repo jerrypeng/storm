@@ -120,7 +120,6 @@ public class CgroupUtils {
     }
 
     public static void writeFileByLine(String fileDir, String string) throws IOException {
-        LOG.info("writeFileByLine fileDir: {} string: {}", fileDir, string);
         FileWriter writer = null;
         BufferedWriter bw = null;
         try {
