@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -111,12 +113,14 @@ public class TestCGroup {
     }
 
     public String readFileAll(String filePath) throws IOException {
-        File file = new File(filePath);
-        FileInputStream fis = new FileInputStream(file);
-        byte[] data = new byte[(int) file.length()];
-        fis.read(data);
-        fis.close();
+//        File file = new File(filePath);
+//        FileInputStream fis = new FileInputStream(file);
+//        byte[] data = new byte[(int) file.length()];
+//        fis.read(data);
+//        fis.close();
 
+        byte[] data = Files.readAllBytes(Paths.get(filePath));
+        LOG.info("data: {}", data);
         return new String(data);
     }
 }
