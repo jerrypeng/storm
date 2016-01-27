@@ -124,7 +124,7 @@ public class CgroupManager implements ResourceIsolationInterface {
             if (isKilled == true && !tasks.isEmpty()) {
                 throw new Exception("Cannot correctly showdown worker CGroup " + workerId + "tasks " + tasks.toString() + " still running!");
             }
-            center.delete(workerGroup);
+            this.center.delete(workerGroup);
         } catch (Exception e) {
             LOG.info("Exception thrown when shutting worker " + workerId + " Exception: " + e);
         }
@@ -140,20 +140,25 @@ public class CgroupManager implements ResourceIsolationInterface {
             subSystemTypes.add(SubSystemType.getSubSystem(resource));
         }
 
-        h = center.busy(subSystemTypes);
+        this.h = center.busy(subSystemTypes);
 
-        LOG.info("root dir {} subsystems: {}", h.getRootCgroups().getDir(), h.getRootCgroups().getCores());
 
-        CpuCore supervisorRootCPU = (CpuCore) h.getRootCgroups().getCores().get(SubSystemType.cpu);
-        LOG.info("supervisorRootCPU.getCpuCfsQuotaUs: {}", supervisorRootCPU.getCpuCfsPeriodUs());
-        //set the cpu usage upper limit for all workers
-        setCpuUsageUpperLimit(supervisorRootCPU, ((Number) this.conf.get(Config.SUPERVISOR_CPU_CAPACITY)).intValue());
+//        CpuCore supervisorRootCPU = (CpuCore) h.getRootCgroups().getCores().get(SubSystemType.cpu);
+//        h.get
+//        LOG.info("supervisorRootCPU.getCpuCfsQuotaUs: {}", supervisorRootCPU.getCpuCfsPeriodUs());
+//        //set the cpu usage upper limit for all workers
+//        setCpuUsageUpperLimit(supervisorRootCPU, ((Number) this.conf.get(Config.SUPERVISOR_CPU_CAPACITY)).intValue());
 
-        if (h == null) {
+        if (this.h == null) {
             Set<SubSystemType> types = new HashSet<SubSystemType>();
             types.add(SubSystemType.cpu);
-            h = new Hierarchy(Config.getCGroupStormHierarchyName(conf), types, Config.getCGroupStormHierarchyDir(conf));
+            this.h = new Hierarchy(Config.getCGroupStormHierarchyName(conf), types, Config.getCGroupStormHierarchyDir(conf));
         }
-        rootCgroup = new CgroupCommon(rootDir, h, h.getRootCgroups());
+        this.rootCgroup = new CgroupCommon(this.rootDir, this.h, this.h.getRootCgroups());
+
+        LOG.info("supervisor root dir {} subsystems: {}", this.rootCgroup.getDir(), this.rootCgroup.getCores());
+
+        CpuCore supervisorRootCPU = (CpuCore)  this.rootCgroup.getCores().get(SubSystemType.cpu);
+        setCpuUsageUpperLimit(supervisorRootCPU, ((Number) this.conf.get(Config.SUPERVISOR_CPU_CAPACITY)).intValue());
     }
 }
