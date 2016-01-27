@@ -85,11 +85,11 @@ public class CgroupManager implements ResourceIsolationInterface {
 
     public String startNewWorker(String workerId, Map resourcesMap) throws SecurityException {
         LOG.info("resourcesMap: {}", resourcesMap);
-        Integer cpuNum = (Integer) resourcesMap.get("cpu");
-        Long totalMem = null;
+        Number cpuNum = (Number) resourcesMap.get("cpu");
+        Number totalMem = null;
         if (resourcesMap.get("memory") != null) {
             LOG.info("memory class: {}", resourcesMap.get("memory").getClass());
-            totalMem = new Long ((Long) resourcesMap.get("memory"));
+            totalMem = (Number) resourcesMap.get("memory");
 
         }
         LOG.info("cpuNum {} totalMem {}", cpuNum, totalMem);
@@ -101,7 +101,7 @@ public class CgroupManager implements ResourceIsolationInterface {
             CpuCore cpuCore = (CpuCore) workerGroup.getCores().get(SubSystemType.cpu);;
 
             try {
-                cpuCore.setCpuShares(cpuNum);
+                cpuCore.setCpuShares(cpuNum.intValue());
             } catch (IOException e) {
                 LOG.info("Exception thown: {}", e);
                 throw new RuntimeException("Cannot set cpu shares!");
@@ -111,8 +111,8 @@ public class CgroupManager implements ResourceIsolationInterface {
         if (totalMem != null) {
             MemoryCore memCore = (MemoryCore) workerGroup.getCores().get(SubSystemType.memory);
             try {
-                LOG.info("mem: {} - {}", Long.valueOf(totalMem * 1024 * 1024), (totalMem * 1024 * 1024));
-                memCore.setPhysicalUsageLimit(Long.valueOf(totalMem * 1024 * 1024));
+                LOG.info("setPhysicalUsageLimit {}", Long.valueOf(totalMem.longValue() * 1024 * 1024));
+                memCore.setPhysicalUsageLimit(Long.valueOf(totalMem.longValue() * 1024 * 1024));
             } catch (IOException e) {
                 LOG.info("Exception thown: {}", e);
                 throw new RuntimeException("Cannot set MEMORY_LIMIT_IN_BYTES !");
