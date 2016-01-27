@@ -121,6 +121,6 @@ public class TestCGroup {
 
         byte[] data = Files.readAllBytes(Paths.get(filePath));
         LOG.info("data: {}", data);
-        return new String(data);
+        return new String(data).trim();
     }
 }
