@@ -83,7 +83,7 @@ public class TestCGroup {
         String pathTomemoryLimitInBytes = pathToWorkerCGroupDir + "/memory.limit_in_bytes";
 
         Assert.assertTrue("Check if memory.limit_in_bytes file exists", fileExists(pathTomemoryLimitInBytes));
-        Assert.assertEquals("Check if the correct value is written into memory.limit_in_bytes", String.valueOf(1024 * 1024 * 1024), readFileAll(pathToCpuShares));
+        Assert.assertEquals("Check if the correct value is written into memory.limit_in_bytes", String.valueOf(1024 * 1024 * 1024), readFileAll(pathTomemoryLimitInBytes));
 
         manager.shutDownWorker(workerId, true);
 
