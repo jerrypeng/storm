@@ -2201,6 +2201,7 @@ public class Config extends HashMap<String, Object> {
     /**
      * full path to cgexec command
      */
+    @isString
     public static String CGROUP_CGEXEC_CMD = "cgroup.cgexec.cmd";
 
 

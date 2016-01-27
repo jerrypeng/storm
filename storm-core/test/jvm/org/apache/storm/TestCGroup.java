@@ -53,7 +53,7 @@ public class TestCGroup {
         CgroupManager manager = new CgroupManager();
         manager.prepare(config);
 
-        Map<String, Integer> resourcesMap = new HashMap<String, Integer>();
+        Map<String, Object> resourcesMap = new HashMap<String, Object>();
         resourcesMap.put("cpu", 200);
         resourcesMap.put("memory", 1024);
         String workerId = UUID.randomUUID().toString();
