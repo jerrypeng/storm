@@ -81,7 +81,6 @@ public class CgroupUtils {
     }
 
     public static List<String> readFileByLine(String fileDir) throws IOException {
-        LOG.info("Reading from file: {}", fileDir);
         List<String> result = new ArrayList<String>();
         FileReader fileReader = null;
         BufferedReader reader = null;
@@ -96,7 +95,6 @@ public class CgroupUtils {
         } finally {
             CgroupUtils.close(fileReader, reader);
         }
-        LOG.info("read result: {}", result);
         return result;
     }
 

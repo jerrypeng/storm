@@ -142,13 +142,6 @@ public class CgroupManager implements ResourceIsolationInterface {
 
         this.h = center.busy(subSystemTypes);
 
-
-//        CpuCore supervisorRootCPU = (CpuCore) h.getRootCgroups().getCores().get(SubSystemType.cpu);
-//        h.get
-//        LOG.info("supervisorRootCPU.getCpuCfsQuotaUs: {}", supervisorRootCPU.getCpuCfsPeriodUs());
-//        //set the cpu usage upper limit for all workers
-//        setCpuUsageUpperLimit(supervisorRootCPU, ((Number) this.conf.get(Config.SUPERVISOR_CPU_CAPACITY)).intValue());
-
         if (this.h == null) {
             Set<SubSystemType> types = new HashSet<SubSystemType>();
             types.add(SubSystemType.cpu);
@@ -156,8 +149,8 @@ public class CgroupManager implements ResourceIsolationInterface {
         }
         this.rootCgroup = new CgroupCommon(this.rootDir, this.h, this.h.getRootCgroups());
 
-        LOG.info("supervisor root dir {} subsystems: {}", this.rootCgroup.getDir(), this.rootCgroup.getCores());
-
+        // set upper limit to how much cpu can be used by all workers running on supervisor node.
+        // This is done so that some cpu cycles will remain free to run the daemons and other miscellaneous OS operations.
         CpuCore supervisorRootCPU = (CpuCore)  this.rootCgroup.getCores().get(SubSystemType.cpu);
         setCpuUsageUpperLimit(supervisorRootCPU, ((Number) this.conf.get(Config.SUPERVISOR_CPU_CAPACITY)).intValue());
     }
