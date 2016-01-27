@@ -54,7 +54,7 @@ public class TestWordSpout extends BaseRichSpout {
     }
         
     public void nextTuple() {
-        //Utils.sleep(100);
+        Utils.sleep(100);
         final String[] words = new String[] {"nathan", "mike", "jackson", "golda", "bertels"};
         final Random rand = new Random();
         final String word = words[rand.nextInt(words.length)];

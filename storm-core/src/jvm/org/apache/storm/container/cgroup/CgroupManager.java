@@ -2,7 +2,6 @@ package org.apache.storm.container.cgroup;
 
 import org.apache.storm.Config;
 import org.apache.storm.container.ResourceIsolationInterface;
-import org.apache.storm.container.cgroup.core.CgroupCore;
 import org.apache.storm.container.cgroup.core.CpuCore;
 import org.apache.storm.container.cgroup.core.MemoryCore;
 import org.apache.storm.utils.Utils;
@@ -32,13 +31,7 @@ public class CgroupManager implements ResourceIsolationInterface {
 
     private Map conf;
 
-    public CgroupManager() {
-        LOG.info("running on cgroup mode");
-    }
-
     public void prepare(Map conf) {
-        // Cgconfig service is used to create the corresponding cpu hierarchy
-        // "/cgroup/cpu"
         this.conf = conf;
         this.rootDir = Config.getCgroupRootDir(this.conf);
         if (this.rootDir == null)
@@ -55,70 +48,51 @@ public class CgroupManager implements ResourceIsolationInterface {
         this.prepareSubSystem(this.conf);
     }
 
-    private int validateCpuUpperLimitValue(int value) {
-        /*
-         * Valid value is -1 or 1~10 -1 means no control
-         */
-        if (value > 10)
-            value = 10;
-        else if (value < 1 && value != -1)
-            value = 1;
-
-        return value;
-    }
-
+    /**
+     * User cfs_period & cfs_quota to control the upper limit use of cpu core e.g. If making a process to fully use two cpu cores, set cfs_period_us to
+     * 100000 and set cfs_quota_us to 200000
+     */
     private void setCpuUsageUpperLimit(CpuCore cpuCore, int cpuCoreUpperLimit) throws IOException {
-        /*
-         * User cfs_period & cfs_quota to control the upper limit use of cpu core e.g. If making a process to fully use two cpu cores, set cfs_period_us to
-         * 100000 and set cfs_quota_us to 200000 The highest value of "cpu core upper limit" is 10
-         */
-        cpuCoreUpperLimit = validateCpuUpperLimitValue(cpuCoreUpperLimit);
 
         if (cpuCoreUpperLimit == -1) {
             // No control of cpu usage
             cpuCore.setCpuCfsQuotaUs(cpuCoreUpperLimit);
         } else {
             cpuCore.setCpuCfsPeriodUs(100000);
-            cpuCore.setCpuCfsQuotaUs(cpuCoreUpperLimit * 100000);
+            cpuCore.setCpuCfsQuotaUs(cpuCoreUpperLimit * 1000);
         }
     }
 
     public String startNewWorker(String workerId, Map resourcesMap) throws SecurityException {
-        LOG.info("resourcesMap: {}", resourcesMap);
         Number cpuNum = (Number) resourcesMap.get("cpu");
         Number totalMem = null;
         if (resourcesMap.get("memory") != null) {
-            LOG.info("memory class: {}", resourcesMap.get("memory").getClass());
             totalMem = (Number) resourcesMap.get("memory");
 
         }
-        LOG.info("cpuNum {} totalMem {}", cpuNum, totalMem);
 
         CgroupCommon workerGroup = new CgroupCommon(workerId, h, this.rootCgroup);
         this.center.create(workerGroup);
 
         if (cpuNum != null) {
-            CpuCore cpuCore = (CpuCore) workerGroup.getCores().get(SubSystemType.cpu);;
-
+            CpuCore cpuCore = (CpuCore) workerGroup.getCores().get(SubSystemType.cpu);
             try {
                 cpuCore.setCpuShares(cpuNum.intValue());
+                //set the cpu usage upper limit
+                setCpuUsageUpperLimit(cpuCore, ((Number) this.conf.get(Config.SUPERVISOR_CPU_CAPACITY)).intValue());
             } catch (IOException e) {
-                LOG.info("Exception thown: {}", e);
-                throw new RuntimeException("Cannot set cpu shares!");
+                throw new RuntimeException("Cannot set cpu.shares! Exception: " + e);
             }
         }
 
         if (totalMem != null) {
             MemoryCore memCore = (MemoryCore) workerGroup.getCores().get(SubSystemType.memory);
             try {
-                LOG.info("setPhysicalUsageLimit {}", Long.valueOf(totalMem.longValue() * 1024 * 1024));
                 memCore.setPhysicalUsageLimit(Long.valueOf(totalMem.longValue() * 1024 * 1024));
             } catch (IOException e) {
-                LOG.info("Exception thown: {}", e);
-                throw new RuntimeException("Cannot set MEMORY_LIMIT_IN_BYTES !");
+                throw new RuntimeException("Cannot set memory.limit_in_bytes! Exception: " + e);
             }
         }
-        //setCpuUsageUpperLimit(cpuCore, ConfigExtension.getWorkerCpuCoreUpperLimit(conf));
 
         StringBuilder sb = new StringBuilder();
 
@@ -144,23 +118,18 @@ public class CgroupManager implements ResourceIsolationInterface {
         try {
             if (isKilled == false) {
                 for (Integer pid : workerGroup.getTasks()) {
-                    LOG.info("killing PID: {}", pid);
                     Utils.kill(pid);
                 }
                 Utils.sleepMs(1500);
             }
             Set<Integer> tasks = workerGroup.getTasks();
-            LOG.info("tasks to free: {}", tasks);
             if (isKilled == true && !tasks.isEmpty()) {
                 throw new Exception("Cannot correctly showdown worker CGroup " + workerId + "tasks " + tasks.toString() + " still running!");
             }
-            LOG.info("deleting cgroup: {} dir {}", workerGroup.getName(), workerGroup.getDir());
             center.delete(workerGroup);
         } catch (Exception e) {
-            LOG.info("Exceptions: {}", e);
-            LOG.info("No task of " + workerId);
+            LOG.info("Exception thrown when shutting worker " + workerId + " Exception: " + e);
         }
-
     }
 
     public void close() throws IOException {
@@ -173,10 +142,7 @@ public class CgroupManager implements ResourceIsolationInterface {
             subSystemTypes.add(SubSystemType.getSubSystem(resource));
         }
 
-        LOG.info("subSystemTypes: {}", subSystemTypes);
         h = center.busy(subSystemTypes);
-
-        LOG.info("Heirarchy name {} dir {} subsystems {} RootCgroups {} type {}", h.getName(), h.getDir(), h.getSubSystems(), h.getRootCgroups(), h.getType());
 
         if (h == null) {
             Set<SubSystemType> types = new HashSet<SubSystemType>();

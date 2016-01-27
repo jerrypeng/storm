@@ -74,7 +74,7 @@ public class ResourceAwareExampleTopology {
     bolt2.setMemoryLoad(100);
 
     Config conf = new Config();
-    conf.setDebug(false);
+    conf.setDebug(true);
 
     /**
      * Use to limit the maximum amount of memory (in MB) allocated to one worker process.
