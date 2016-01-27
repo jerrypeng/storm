@@ -54,7 +54,7 @@ public class CgroupCenter implements CgroupOperation {
 
     @Override
     public List<Hierarchy> getHierarchies() {
-        // TODO Auto-generated method stub
+
         Map<String, Hierarchy> hierarchies = new HashMap<String, Hierarchy>();
         FileReader reader = null;
         BufferedReader br = null;
@@ -84,7 +84,7 @@ public class CgroupCenter implements CgroupOperation {
 
     @Override
     public Set<SubSystem> getSubSystems() {
-        // TODO Auto-generated method stub
+
         Set<SubSystem> subSystems = new HashSet<SubSystem>();
         FileReader reader = null;
         BufferedReader br = null;
@@ -111,7 +111,7 @@ public class CgroupCenter implements CgroupOperation {
 
     @Override
     public boolean enabled(SubSystemType subsystem) {
-        // TODO Auto-generated method stub
+
         Set<SubSystem> subSystems = this.getSubSystems();
         for (SubSystem subSystem : subSystems) {
             if (subSystem.getType() == subsystem)
@@ -152,7 +152,7 @@ public class CgroupCenter implements CgroupOperation {
 
     @Override
     public Hierarchy mounted(Hierarchy hierarchy) {
-        // TODO Auto-generated method stub
+
         List<Hierarchy> hierarchies = this.getHierarchies();
         if (CgroupUtils.dirExists(hierarchy.getDir())) {
             for (Hierarchy h : hierarchies) {
@@ -165,7 +165,7 @@ public class CgroupCenter implements CgroupOperation {
 
     @Override
     public void mount(Hierarchy hierarchy) throws IOException {
-        // TODO Auto-generated method stub
+
         if (this.mounted(hierarchy) != null) {
             LOG.error(hierarchy.getDir() + " is mounted");
             return;
@@ -188,7 +188,6 @@ public class CgroupCenter implements CgroupOperation {
 
     @Override
     public void umount(Hierarchy hierarchy) throws IOException {
-        // TODO Auto-generated method stub
         if (this.mounted(hierarchy) != null) {
             hierarchy.getRootCgroups().delete();
             SystemOperation.umount(hierarchy.getDir());
@@ -198,7 +197,6 @@ public class CgroupCenter implements CgroupOperation {
 
     @Override
     public void create(CgroupCommon cgroup) throws SecurityException {
-        // TODO Auto-generated method stub
         if (cgroup.isRoot()) {
             LOG.error("You can't create rootCgroup in this function");
             return;
@@ -229,7 +227,7 @@ public class CgroupCenter implements CgroupOperation {
 
     @Override
     public void delete(CgroupCommon cgroup) throws IOException {
-        // TODO Auto-generated method stub
+
         cgroup.delete();
     }
 

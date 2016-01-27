@@ -39,7 +39,6 @@ public class NetPrioCore implements CgroupCore {
 
     @Override
     public SubSystemType getType() {
-        // TODO Auto-generated method stub
         return SubSystemType.net_prio;
     }
 
