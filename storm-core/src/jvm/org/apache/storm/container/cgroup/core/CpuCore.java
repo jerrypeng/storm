@@ -73,7 +73,7 @@ public class CpuCore implements CgroupCore {
         CgroupUtils.writeFileByLine(Constants.getDir(this.dir, CPU_CFS_PERIOD_US), String.valueOf(us));
     }
 
-    public Long getCpuCfsPeriodUs(long us) throws IOException {
+    public Long getCpuCfsPeriodUs() throws IOException {
         return Long.parseLong(CgroupUtils.readFileByLine(Constants.getDir(this.dir, CPU_CFS_PERIOD_US)).get(0));
     }
 
@@ -81,7 +81,7 @@ public class CpuCore implements CgroupCore {
         CgroupUtils.writeFileByLine(Constants.getDir(this.dir, CPU_CFS_QUOTA_US), String.valueOf(us));
     }
 
-    public Long getCpuCfsQuotaUs(long us) throws IOException {
+    public Long getCpuCfsQuotaUs() throws IOException {
         return Long.parseLong(CgroupUtils.readFileByLine(Constants.getDir(this.dir, CPU_CFS_QUOTA_US)).get(0));
     }
 

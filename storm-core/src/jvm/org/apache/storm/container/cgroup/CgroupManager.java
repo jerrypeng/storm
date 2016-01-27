@@ -145,6 +145,7 @@ public class CgroupManager implements ResourceIsolationInterface {
         LOG.info("root dir {} subsystems: {}", h.getRootCgroups().getDir(), h.getRootCgroups().getCores());
 
         CpuCore supervisorRootCPU = (CpuCore) h.getRootCgroups().getCores().get(SubSystemType.cpu);
+        LOG.info("supervisorRootCPU.getCpuCfsQuotaUs: {}", supervisorRootCPU.getCpuCfsPeriodUs());
         //set the cpu usage upper limit for all workers
         setCpuUsageUpperLimit(supervisorRootCPU, ((Number) this.conf.get(Config.SUPERVISOR_CPU_CAPACITY)).intValue());
 
